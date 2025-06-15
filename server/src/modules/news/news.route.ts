@@ -1,10 +1,9 @@
 import { Router } from 'express';
 import { getAllNews, getNewsById, createNews, updateNews, deleteNews } from './news.controller';
 import { requireAuth, requireRole } from '../../middlewares/auth.middleware';
-import multer from 'multer';
+import { upload } from '../../utils/multer';
 
 const router = Router();
-const upload = multer({ dest: 'uploads/' });
 
 // Public routes
 router.get('/', getAllNews);

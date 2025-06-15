@@ -5,6 +5,7 @@ import bikeRoutes from './modules/bikes/bike.route';
 import paymentRoutes from './modules/payments/payment.route';
 import orderRoutes from './modules/orders/order.route';
 import adminRoutes from './modules/admin/admin.route';
+import newsRoutes from './modules/news/news.route';
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use('/bikes', bikeRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/orders', orderRoutes);
 router.use('/admin', adminRoutes);
+router.use('/news', newsRoutes);
 
 export default router;

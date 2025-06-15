@@ -12,11 +12,13 @@ const NewsEvents: React.FC = () => {
   useEffect(() => {
     const fetchNews = async () => {
       try {
+        setLoading(true);
         const data = await newsService.getAllNews();
         setNews(data);
+        setError(null);
       } catch (err) {
-        setError("Failed to fetch news");
         console.error("Error fetching news:", err);
+        setError("Failed to fetch news");
       } finally {
         setLoading(false);
       }
@@ -27,32 +29,56 @@ const NewsEvents: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="py-16 bg-white">
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="space-y-3">
-                  <div className="h-48 bg-gray-200 rounded"></div>
-                  <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="flex justify-between items-center mb-12">
+            <div className="h-8 w-48 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-6 w-24 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-lg overflow-hidden shadow-lg">
+                <div className="h-48 bg-gray-200 animate-pulse"></div>
+                <div className="p-6 space-y-4">
+                  <div className="h-6 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse"></div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
     );
   }
 
   if (error) {
     return (
-      <div className="py-16 bg-white">
-        <div className="container mx-auto px-4 text-center text-red-500">
-          {error}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-primary-600 hover:text-primary-700">
+            Try again
+          </button>
         </div>
-      </div>
+      </section>
+    );
+  }
+
+  if (news.length === 0) {
+    return (
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-8">News & Events</h2>
+          <p className="text-gray-600">
+            No news articles available at the moment.
+          </p>
+        </div>
+      </section>
     );
   }
 
@@ -64,7 +90,7 @@ const NewsEvents: React.FC = () => {
           <Link
             to="/news"
             className="text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
-            Learn more
+            View all
             <svg
               className="w-4 h-4"
               fill="none"
@@ -99,15 +125,11 @@ const NewsEvents: React.FC = () => {
                     {item.title}
                   </h3>
                   <p className="text-gray-600 mb-4 line-clamp-3">
-                    {item.content}
+                    {item.description || item.content}
                   </p>
                   <div className="flex justify-between items-center text-sm text-gray-500">
                     <span>
-                      {new Date(item.createdAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
+                      {new Date(item.publishDate).toLocaleDateString()}
                     </span>
                     <span className="text-primary-600">Read more →</span>
                   </div>

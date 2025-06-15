@@ -5,6 +5,7 @@ import { newsService, type News } from "../../services/newsService";
 interface NewsFormData {
   title: string;
   content: string;
+  description: string;
   image: File | null;
 }
 
@@ -16,14 +17,17 @@ const NewsManagement: React.FC = () => {
   const [formData, setFormData] = useState<NewsFormData>({
     title: "",
     content: "",
+    description: "",
     image: null,
   });
+
   const fetchNews = async () => {
     try {
       setLoading(true);
       const data = await newsService.getAllNews();
       setNews(data);
     } catch (error) {
+      console.error("Error fetching news:", error);
       toast.error("Failed to fetch news");
     } finally {
       setLoading(false);
@@ -36,19 +40,67 @@ const NewsManagement: React.FC = () => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFormData({ ...formData, image: e.target.files[0] });
+      const file = e.target.files[0];
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size should be less than 5MB");
+        return;
+      }
+      // Validate file type
+      if (
+        !["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(
+          file.type
+        )
+      ) {
+        toast.error("Only JPEG, JPG, PNG and WEBP images are allowed");
+        return;
+      }
+      setFormData({ ...formData, image: file });
     }
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate required fields
+    if (!formData.title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+    if (!formData.description.trim()) {
+      toast.error("Description is required");
+      return;
+    }
+    if (!formData.content.trim()) {
+      toast.error("Content is required");
+      return;
+    }
+    if (!formData.image && !isEditing) {
+      toast.error("Image is required");
+      return;
+    }
+
     try {
       setLoading(true);
+
+      // Create FormData object
       const formDataToSend = new FormData();
-      formDataToSend.append("title", formData.title);
-      formDataToSend.append("content", formData.content);
+      formDataToSend.append("title", formData.title.trim());
+      formDataToSend.append("description", formData.description.trim());
+      formDataToSend.append("content", formData.content.trim());
+
+      // Only append image if it exists
       if (formData.image) {
         formDataToSend.append("image", formData.image);
       }
+
+      // Log form data for debugging
+      console.log("Form data being sent:", {
+        title: formData.title,
+        description: formData.description,
+        content: formData.content,
+        hasImage: !!formData.image,
+      });
 
       if (isEditing && selectedNews) {
         await newsService.updateNews(selectedNews._id, formDataToSend);
@@ -58,138 +110,167 @@ const NewsManagement: React.FC = () => {
         toast.success("News created successfully");
       }
 
-      fetchNews();
-      resetForm();
-    } catch (error) {
-      toast.error("Failed to save news");
+      // Reset form and fetch updated news list
+      setFormData({
+        title: "",
+        content: "",
+        description: "",
+        image: null,
+      });
+      setIsEditing(false);
+      setSelectedNews(null);
+      await fetchNews();
+    } catch (error: any) {
+      console.error("Error submitting news:", error);
+      toast.error(error.message || "Failed to submit news");
     } finally {
       setLoading(false);
     }
-  };
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this news?")) return;
-
-    try {
-      setLoading(true);
-      await newsService.deleteNews(id);
-      toast.success("News deleted successfully");
-      fetchNews();
-    } catch (error) {
-      toast.error("Failed to delete news");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEdit = (newsItem: News) => {
-    setSelectedNews(newsItem);
-    setFormData({
-      title: newsItem.title,
-      content: newsItem.content,
-      image: null,
-    });
-    setIsEditing(true);
-  };
-
-  const resetForm = () => {
-    setFormData({ title: "", content: "", image: null });
-    setSelectedNews(null);
-    setIsEditing(false);
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">News Management</h2>
-
-      {/* News Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="mb-8 bg-white p-6 rounded-lg shadow">
-        <h3 className="text-xl font-semibold mb-4">
-          {isEditing ? "Edit News" : "Add New News"}
-        </h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Title</label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Content</label>
-            <textarea
-              value={formData.content}
-              onChange={(e) =>
-                setFormData({ ...formData, content: e.target.value })
-              }
-              className="w-full p-2 border rounded h-32"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Image</label>
-            <input
-              type="file"
-              onChange={handleImageChange}
-              className="w-full"
-              accept="image/*"
-            />
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-              {loading ? "Saving..." : isEditing ? "Update News" : "Add News"}
-            </button>
-            {isEditing && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
-                Cancel
-              </button>
-            )}
-          </div>
+    <div className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Title
+          </label>
+          <input
+            type="text"
+            value={formData.title}
+            onChange={(e) =>
+              setFormData({ ...formData, title: e.target.value })
+            }
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            required
+          />
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Description
+          </label>
+          <input
+            type="text"
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Content
+          </label>
+          <textarea
+            value={formData.content}
+            onChange={(e) =>
+              setFormData({ ...formData, content: e.target.value })
+            }
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            rows={6}
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Image
+          </label>
+          <input
+            type="file"
+            onChange={handleImageChange}
+            className="mt-1 block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-md file:border-0
+              file:text-sm file:font-semibold
+              file:bg-primary-50 file:text-primary-700
+              hover:file:bg-primary-100"
+            accept="image/jpeg,image/jpg,image/png,image/webp"
+            required={!isEditing}
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 disabled:opacity-50">
+          {loading ? "Saving..." : isEditing ? "Update News" : "Add News"}
+        </button>
+        {isEditing && (
+          <button
+            type="button"
+            onClick={() => {
+              setIsEditing(false);
+              setSelectedNews(null);
+              setFormData({
+                title: "",
+                content: "",
+                description: "",
+                image: null,
+              });
+            }}
+            className="ml-4 text-gray-600 hover:text-gray-800">
+            Cancel
+          </button>
+        )}
       </form>
 
       {/* News List */}
-      <div className="bg-white rounded-lg shadow">
-        <h3 className="text-xl font-semibold p-6 border-b">News List</h3>
-        {loading && <div className="p-6 text-center">Loading...</div>}
-        {!loading && news.length === 0 && (
-          <div className="p-6 text-center text-gray-500">
-            No news articles found
-          </div>
-        )}
-        {!loading && news.length > 0 && (
-          <div className="divide-y">
+      <div className="mt-8">
+        <h3 className="text-lg font-medium text-gray-900">News List</h3>
+        {loading ? (
+          <p>Loading...</p>
+        ) : news.length === 0 ? (
+          <p>No news articles found.</p>
+        ) : (
+          <div className="mt-4 space-y-4">
             {news.map((item) => (
               <div
                 key={item._id}
-                className="p-6 flex items-center justify-between">
+                className="border rounded-lg p-4 flex justify-between items-start">
                 <div>
                   <h4 className="font-medium">{item.title}</h4>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-600">{item.description}</p>
+                  <p className="text-xs text-gray-500">
                     {new Date(item.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="space-x-2">
                   <button
-                    onClick={() => handleEdit(item)}
-                    className="px-3 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200">
+                    onClick={() => {
+                      setIsEditing(true);
+                      setSelectedNews(item);
+                      setFormData({
+                        title: item.title,
+                        content: item.content,
+                        description: item.description,
+                        image: null,
+                      });
+                    }}
+                    className="text-blue-600 hover:text-blue-800">
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(item._id)}
-                    className="px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200">
+                    onClick={async () => {
+                      if (
+                        window.confirm(
+                          "Are you sure you want to delete this news article?"
+                        )
+                      ) {
+                        try {
+                          await newsService.deleteNews(item._id);
+                          toast.success("News deleted successfully");
+                          fetchNews();
+                        } catch (error) {
+                          toast.error("Failed to delete news");
+                        }
+                      }
+                    }}
+                    className="text-red-600 hover:text-red-800">
                     Delete
                   </button>
                 </div>

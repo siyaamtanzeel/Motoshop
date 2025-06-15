@@ -33,10 +33,10 @@ export const toggleUserBlock = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    user.isBlocked = !user.isBlocked;
+    user.isActive = !user.isActive;
     await user.save();
 
-    res.json({ message: `User ${user.isBlocked ? 'blocked' : 'unblocked'} successfully` });
+    res.json({ message: `User ${user.isActive ? 'blocked' : 'unblocked'} successfully` });
   } catch (error) {
     res.status(500).json({ message: 'Error toggling user block status' });
   }

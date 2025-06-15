@@ -14,10 +14,13 @@ const AboutPage = () => {
       {/* Hero Section */}
       <div className="relative bg-primary-900 text-white py-24">
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-900/90 to-primary-800/90 z-10" />
-          <img src="/about-hero.jpg" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-900/40 to-primary-800/40 z-10" />
+          <img
+            src="https://cache.miancp.com:2083/data/www.ducasubike.com/images/support_banner.png"
+            className="w-full h-full object-cover"
+          />
         </div>
-        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-20 max-w-7xl mx-auto px-4 flex items-center justify-center sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <h1 className="text-5xl font-extrabold tracking-tight mb-6">
               About MotoShop

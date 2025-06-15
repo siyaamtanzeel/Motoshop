@@ -78,33 +78,59 @@ const Navbar: React.FC = () => {
     <nav
       className={twMerge(
         "fixed top-0 w-full transition-all duration-300 z-50",
-        scrolled
+        scrolled || !["/", "/bikes"].includes(location.pathname)
           ? "bg-white shadow-md text-gray-800"
           : "bg-transparent text-white"
       )}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <span
-              className={twMerge(
-                "text-2xl font-bold transition-colors",
-                scrolled || location.pathname !== "/" || isOpen
-                  ? "text-gray-900"
-                  : "text-white"
-              )}>
-              MotoShop
-            </span>
+          <Link to="/" className="flex-shrink-0 flex items-center">
+            <h1 className="text-2xl font-bold">MotoShop</h1>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-8">
-            <StyledNavLink to="/">Home</StyledNavLink>
-            <StyledNavLink to="/bikes" onClick={scrollToCategories}>
+          <div className="hidden md:flex items-center space-x-8">
+            <Link
+              to="/"
+              className={twMerge(
+                "hover:text-primary-500 transition-colors",
+                location.pathname === "/" && "text-primary-500"
+              )}>
+              Home
+            </Link>
+            <Link
+              to="/bikes"
+              className={twMerge(
+                "hover:text-primary-500 transition-colors",
+                location.pathname === "/bikes" && "text-primary-500"
+              )}>
               Motorcycles
-            </StyledNavLink>
-            <StyledNavLink to="/about">About</StyledNavLink>
-            <StyledNavLink to="/contact">Contact</StyledNavLink>
+            </Link>
+            <Link
+              to="/support"
+              className={twMerge(
+                "hover:text-primary-500 transition-colors",
+                location.pathname === "/support" && "text-primary-500"
+              )}>
+              Support
+            </Link>
+            <Link
+              to="/about"
+              className={twMerge(
+                "hover:text-primary-500 transition-colors",
+                location.pathname === "/about" && "text-primary-500"
+              )}>
+              About
+            </Link>
+            <Link
+              to="/contact"
+              className={twMerge(
+                "hover:text-primary-500 transition-colors",
+                location.pathname === "/contact" && "text-primary-500"
+              )}>
+              Contact
+            </Link>
             {user ? (
               <Menu as="div" className="relative ml-3">
                 <Menu.Button className="flex items-center space-x-2 hover:opacity-80">
@@ -127,7 +153,7 @@ const Navbar: React.FC = () => {
                           <Link
                             to="/admin"
                             className={twMerge(
-                              "block px-4 py-2 text-sm text-gray-700",
+                              "block px-4 py-2 text-sm font-bold text-gray-700",
                               active && "bg-gray-100 rounded-t-xl"
                             )}>
                             Admin Dashboard
@@ -140,7 +166,7 @@ const Navbar: React.FC = () => {
                         <button
                           onClick={handleLogout}
                           className={twMerge(
-                            "block w-full text-left px-4 py-2 text-sm text-gray-700",
+                            "block w-full text-center px-4 py-2 text-sm text-white bg-red-500",
                             active && "bg-gray-100",
                             !user.role && "rounded-t-xl",
                             "rounded-b-xl"
@@ -201,6 +227,9 @@ const Navbar: React.FC = () => {
           <MobileNavLink to="/bikes" onClick={() => setIsOpen(false)}>
             Motorcycles
           </MobileNavLink>
+          <MobileNavLink to="/support" onClick={() => setIsOpen(false)}>
+            Support
+          </MobileNavLink>
           <MobileNavLink to="/about" onClick={() => setIsOpen(false)}>
             About
           </MobileNavLink>
@@ -219,7 +248,7 @@ const Navbar: React.FC = () => {
             <>
               {user.role === "admin" && (
                 <MobileNavLink to="/admin" onClick={() => setIsOpen(false)}>
-                  Admin Dashboard
+                  <span className="font-bold">Admin Dashboard</span>
                 </MobileNavLink>
               )}
               <button
@@ -227,7 +256,7 @@ const Navbar: React.FC = () => {
                   handleLogout();
                   setIsOpen(false);
                 }}
-                className="block w-full text-left px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100">
+                className="block w-full px-3 py-2 rounded-md bg-red-600 text-white text-center">
                 Sign out
               </button>
             </>
